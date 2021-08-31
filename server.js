@@ -51,6 +51,7 @@ app.get('/api/shorturl/:short_url', function (req, res, next) {
 
 // url post endpoint
 app.post('/api/shorturl', function (req, res, next) {
+  console.log(req.body);
   const { url } = req.body;
   const prefixRemover =
     /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)/gim;
