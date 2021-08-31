@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const shortid = require('shortid');
 const cors = require('cors');
 const dns = require('dns');
 const app = express();
@@ -20,7 +19,7 @@ const URLSchema = new mongoose.Schema({
     unique: true,
   },
   short_url: {
-    type: String,
+    type: Number,
     required: true,
   },
 });
@@ -54,7 +53,7 @@ app.get('/api/shorturl/:short_url', function (req, res, next) {
 // url post endpoint
 app.post('/api/shorturl', function (req, res, next) {
   const { url } = req.body;
-  const id = shortid.generate();
+  const id = parseInt(Math.random() * 1000);
   const prefixRemover =
     /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)/gim;
 
