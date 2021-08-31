@@ -19,7 +19,7 @@ const URLSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
-  shortened_url: {
+  short_url: {
     type: String,
     required: true,
   },
@@ -45,7 +45,7 @@ app.get('/api/hello', function (req, res) {
 app.get('/api/shorturl/:short_url', function (req, res, next) {
   const { short_url } = req.params;
 
-  URL.find({ shortened_url: short_url }, function (err, data) {
+  URL.find({ short_url: short_url }, function (err, data) {
     if (err) return next(err);
     res.redirect(data[0].original_url);
   });
@@ -62,10 +62,10 @@ app.post('/api/shorturl', function (req, res, next) {
     if (err && err.code === 'ENOTFOUND')
       return res.json({ error: 'invalid url' });
 
-    URL.create({ original_url: url, shortened_url: id }, function (err, data) {
+    URL.create({ original_url: url, short_url: id }, function (err, data) {
       if (err?.code === 11000) return res.json({ original_url: url });
       if (err) return next(err);
-      res.json({ original_url: url, shortened_url: data.shortened_url });
+      res.json({ original_url: url, short_url: data.short_url });
     });
   });
 });
