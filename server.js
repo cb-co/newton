@@ -55,34 +55,39 @@ app.post('/api/shorturl', function (req, res, next) {
   const { url } = req.body;
   const prefixRemover =
     /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)/gim;
+  const suffixRemover = /(\/\?)[\S]*/gim;
+  console.log(url.replace(prefixRemover, '').replace(suffixRemover, ''));
 
-  dns.lookup(url.replace(prefixRemover, ''), (err) => {
-    if (err && err.code === 'ENOTFOUND')
-      return res.json({ error: 'invalid url' });
+  dns.lookup(
+    url.replace(prefixRemover, '').replace(suffixRemover, ''),
+    (err) => {
+      if (err && err.code === 'ENOTFOUND')
+        return res.json({ error: 'invalid url' });
 
-    let id = 1;
+      let id = 1;
 
-    URL.findOne({})
-      .sort({ short_url: 'desc' })
-      .exec((err, data) => {
-        if (!err && data !== null) {
-          id = data.short_url + 1;
-        }
+      URL.findOne({})
+        .sort({ short_url: 'desc' })
+        .exec((err, data) => {
+          if (!err && data !== null) {
+            id = data.short_url + 1;
+          }
 
-        if (!err) {
-          URL.findOneAndUpdate(
-            { original_url: url },
-            { original_url: url, short_url: id },
-            { upsert: true, new: true },
-            function (err, savedUrl) {
-              if (err) return next(err);
+          if (!err) {
+            URL.findOneAndUpdate(
+              { original_url: url },
+              { original_url: url, short_url: id },
+              { upsert: true, new: true },
+              function (err, savedUrl) {
+                if (err) return next(err);
 
-              res.json({ original_url: url, short_url: savedUrl.short_url });
-            }
-          );
-        }
-      });
-  });
+                res.json({ original_url: url, short_url: savedUrl.short_url });
+              }
+            );
+          }
+        });
+    }
+  );
 });
 
 app.listen(port, function () {
