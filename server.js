@@ -16,7 +16,7 @@ mongoose.connect(process.env.DB_URI, {
 const URLSchema = new mongoose.Schema({
   original_url: {
     type: String,
-    unique: true,
+    required: true,
   },
   short_url: {
     type: Number,
@@ -59,17 +59,28 @@ app.post('/api/shorturl', function (req, res, next) {
     if (err && err.code === 'ENOTFOUND')
       return res.json({ error: 'invalid url' });
 
-    URL.findOneAndUpdate(
-      { short_url: 0 },
-      { original_url: url, $inc: { short_url: 1 } },
-      { upsert: true, new: true },
-      function (err, data) {
-        if (err?.code === 11000) return res.json(err);
-        if (err) return next(err);
+    let id = 1;
 
-        res.json({ original_url: url, short_url: data.short_url });
-      }
-    );
+    URL.findOne({})
+      .sort({ short_url: 'desc' })
+      .exec((err, data) => {
+        if (!err && data !== null) {
+          id = data.short_url + 1;
+        }
+
+        if (!err) {
+          URL.findOneAndUpdate(
+            { original_url: url },
+            { original_url: url, short_url: id },
+            { upsert: true, new: true },
+            function (err, savedUrl) {
+              if (err) return next(err);
+
+              res.json({ original_url: url, short_url: savedUrl.short_url });
+            }
+          );
+        }
+      });
   });
 });
 
