@@ -20,7 +20,6 @@ const URLSchema = new mongoose.Schema({
   },
   short_url: {
     type: Number,
-    required: true,
   },
 });
 
@@ -53,7 +52,6 @@ app.get('/api/shorturl/:short_url', function (req, res, next) {
 // url post endpoint
 app.post('/api/shorturl', function (req, res, next) {
   const { url } = req.body;
-  const id = parseInt(Math.random() * 1000);
   const prefixRemover =
     /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)/gim;
 
@@ -61,11 +59,17 @@ app.post('/api/shorturl', function (req, res, next) {
     if (err && err.code === 'ENOTFOUND')
       return res.json({ error: 'invalid url' });
 
-    URL.create({ original_url: url, short_url: id }, function (err, data) {
-      if (err?.code === 11000) return res.json({ original_url: url });
-      if (err) return next(err);
-      res.json({ original_url: url, short_url: data.short_url });
-    });
+    URL.findOneAndUpdate(
+      { short_url: 0 },
+      { original_url: url, $inc: { short_url: 1 } },
+      { upsert: true, new: true },
+      function (err, data) {
+        if (err?.code === 11000) return res.json(err);
+        if (err) return next(err);
+
+        res.json({ original_url: url, short_url: data.short_url });
+      }
+    );
   });
 });
 
